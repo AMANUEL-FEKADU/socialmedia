@@ -1,5 +1,5 @@
 const mongoose=require('mongoose')
-
+const {Schema, model}=mongoose
 const userSchema= new Schema({
     fullName:{
         type:String,
@@ -50,4 +50,4 @@ const userSchema= new Schema({
     timestamp:true
 })
 
-module.exports=model("user",userSchema)
+module.exports=model("User",userSchema)

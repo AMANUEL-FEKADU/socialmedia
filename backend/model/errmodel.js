@@ -1,10 +1,10 @@
-const { model } = require("mongoose");
+
 
 class HttpError extends Error{
     constructor(message,errorCode){
-        superZZ(message);
+        super(message);
         this.code=errorCode;
     }
 }
 
-model.exports=HttpError;
+module.exports=HttpError;
