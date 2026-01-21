@@ -60,7 +60,7 @@ const loginuser=async(req,res,next)=>{
             expiresIn:"30d"
         })
 
-        res.json({token,id: user?._id,user}).status(200)
+        res.json({token,id: user?._id}).status(200)
     } catch (error) {
         return next(new Httperror(error))
         
@@ -69,7 +69,13 @@ const loginuser=async(req,res,next)=>{
 
 const gettuser=async(req,res,next)=>{
     try {
-        res.json('gotten')
+        const {id}=req.params
+        const user=await UserModel.findById(id)
+
+        if(!user){
+            return next(new Httperror("user not found"),404)
+        }
+        res.json(user).status(200)
     } catch (error) {
         return next(new Httperror(error))
         
@@ -77,7 +83,11 @@ const gettuser=async(req,res,next)=>{
 }
 const gettusers=async(req,res,next)=>{
     try {
-        res.json('gottensers')
+        const users=await UserModel.find().limit(5).sort({createdAt:-1})
+        if(!users){
+            return next(new Httperror("no users found"),422)
+        }
+        res.send(users).status(200)
     } catch (error) {
         return next(new Httperror(error))
         
@@ -86,7 +96,11 @@ const gettusers=async(req,res,next)=>{
 
 const edituser=async(req,res,next)=>{
     try {
-        res.json('edited')
+        const{fullName,bio}=req.body
+        const edituser=await UserModel.findByIdAndUpdate(req.user.id,{fullName,bio},{new: true})
+        res.status(200).json(edituser)
+        
+
     } catch (error) {
         return next(new Httperror(error))
         
@@ -95,7 +109,23 @@ const edituser=async(req,res,next)=>{
 
 const followuser=async(req,res,next)=>{
     try {
-        res.json('foolow/nfollow')
+       const usertofollow=req.params.id
+       if(req.user.id==usertofollow){
+            return next(new Httperror("you cant follow/unfollow your self",422))
+       }
+       const currentuser=await UserModel.findById(req.user.id)
+       const isFollowing=currentuser?.following?.includes(usertofollow)
+       
+       if(!isFollowing){
+        const updated=await UserModel.findByIdAndUpdate(usertofollow,{$push:{followers:req.user.id} }, {new: true})
+        await UserModel.findByIdAndUpdate(req.user.id,{$push:{following: usertofollow} },{new: true})
+        res.status(200).json({message:"you are following \n" +updated})
+       } else{
+         const updated=await UserModel.findByIdAndUpdate(usertofollow,{$pull:{followers:req.user.id} }, {new: true})
+        await UserModel.findByIdAndUpdate(req.user.id,{$pull:{following: usertofollow} },{new: true})
+        res.status(200).json({message:"you are unfollowing \n" +updated})
+
+       }
     } catch (error) {
         return next(new Httperror(error))
         
@@ -104,7 +134,7 @@ const followuser=async(req,res,next)=>{
 
 const changeppuser=async(req,res,next)=>{
     try {
-        res.json('ppchanged')
+        
     } catch (error) {
         return next(new Httperror(error))
         
